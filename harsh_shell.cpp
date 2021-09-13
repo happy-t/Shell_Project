@@ -132,16 +132,18 @@ int happy_help(char **args);
 int happy_exit(char **args);
 int happy_ls(char **args);
 int happy_clear(char **args);
+int happy_mycat(char **args);
 
-char *b_str[] = {(char*)"ccd", (char*)"help", (char*)"exit"
-				, (char*)"show", (char*)"clear"};
+char *b_str[] = {(char*)"mycd", (char*)"help", (char*)"exit"
+				, (char*)"show", (char*)"clear", (char*)"mycat"};
 
 int (*b_func[])(char **) = {
 	&happy_cd,
 	&happy_help,
 	&happy_exit,
 	&happy_ls,
-	&happy_clear
+	&happy_clear,
+	&happy_mycat
 };
 
 int nums_b()
@@ -173,7 +175,7 @@ int happy_help(char **args)
 	cout<<" This Shell belongs to Harsh Tripathi\n";
 	cout<<" The Following Commands are built in till now\n";
 
-	for(i=0; i<5; i++)
+	for(i=0; i<nums_b(); i++)
 	{
 		cout<<"-->"<<b_str[i]<<endl;
 	}
@@ -191,13 +193,16 @@ int happy_ls(char **args)
 {
 	int pid;
 	int status;
-
+	char *path = (char*) malloc(sizeof(char)*MAX_SIZE);
 	pid = fork();
 	if(pid == 0)
 	{
-		if(execvp("/home/happy/Desktop/shell_project/show", args) == -1)
+		strncpy(path, init_dir, MAX_SIZE);
+		strcat(path, "/show");
+		if(execvp(path, args) == -1)
 		{
 			cout<<"Error\n";
+			return 1;
 		}
 		exit(1);
 	}else if(pid < 0)
@@ -210,13 +215,48 @@ int happy_ls(char **args)
 			wait(&status);
 		}while(!WIFEXITED(status) && !WIFSIGNALED(status));
 	}
-
+	free(path);
 	return 1;
 }
 
 int happy_clear(char **args)
 {
 	clear();
+	return 1;
+}
+
+int happy_mycat(char **args)
+{
+	int pid;
+	int status;
+	char *path = (char*)malloc(sizeof(char)*MAX_SIZE);
+	pid = fork();
+
+	if(pid == 0)
+	{
+		strncpy(path, init_dir, MAX_SIZE);
+		strcat(path, "/mycat");
+
+		if(execvp(path, args) == -1)
+		{
+			cout<<"Error\n";
+			return 1;
+		}
+
+	}
+	else if(pid < 0)
+	{
+		cout<<"Error\n";
+		return 1;
+	}
+	else
+	{
+		do
+		{
+			wait(&status);
+		}while(!WIFEXITED(status) && !WIFSIGNALED(status));
+	}
+	free(path);
 	return 1;
 }
 
