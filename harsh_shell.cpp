@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <cstring>
+#include <fstream>
 #define MAX_SIZE 2048
 #define TKSIZE 64
 #define DELMT " \t\a\n\r"
@@ -13,6 +14,8 @@ char *current_dir;
 #define clear() printf("\033[H\033[J")
 
 using namespace std;
+ofstream outfile;
+ifstream infile;
 
 void displayPrompt(char s[])
 {
@@ -22,7 +25,7 @@ void displayPrompt(char s[])
 		clear();
 		a = 0;
 	}
-	cout<<s<<" >>";
+	cout<<s<<" >> ";
 }
 
 
@@ -36,13 +39,14 @@ char *takeInput()
 	if(!buffer)
 	{
 		//allocation error
+		cout<<"Allocation Error\n";
 	}
 	while (1) {
 		c = getchar();
 		if(c == EOF || c == '\n')
 		{
 			buffer[position] = '\0';
-			return buffer;
+			break;
 		}
 		else
 		{
@@ -58,10 +62,16 @@ char *takeInput()
 			if(!buffer)
 			{
 				//allocation error
+				cout<<"Allocation Error\n";
 			}
 		}
 	}
+	outfile<<buffer<<endl;
+
+	return buffer;
 }
+
+
 
 char **split_cmd(char *line)
 {
@@ -73,6 +83,7 @@ char **split_cmd(char *line)
 	if(!tokens)
 	{
 		//allocation Error
+		cout<<"Allocation Error\n";
 	}
 
 	token = strtok(line, DELMT);
@@ -133,9 +144,10 @@ int happy_exit(char **args);
 int happy_ls(char **args);
 int happy_clear(char **args);
 int happy_mycat(char **args);
+int happy_history(char **args);
 
 char *b_str[] = {(char*)"mycd", (char*)"help", (char*)"exit"
-				, (char*)"show", (char*)"clear", (char*)"mycat"};
+				, (char*)"show", (char*)"clear", (char*)"mycat", (char*)"history"};
 
 int (*b_func[])(char **) = {
 	&happy_cd,
@@ -143,13 +155,32 @@ int (*b_func[])(char **) = {
 	&happy_exit,
 	&happy_ls,
 	&happy_clear,
-	&happy_mycat
+	&happy_mycat,
+	&happy_history
 };
 
 int nums_b()
 {
 	int k = sizeof(b_str)/sizeof(char *);
 	return k;
+}
+
+int happy_history(char **args)
+{
+	string line;
+	char path[MAX_SIZE];
+	strcpy(path, init_dir);
+	strcat(path,"/.history.txt");
+	infile.open(path);
+	while(getline(infile, line))
+	{
+		if(line.compare("") == 0)
+			continue;
+		cout<<line<<endl;
+	}
+	infile.close();
+
+	return 1;
 }
 
 int happy_cd(char **args)
@@ -177,7 +208,7 @@ int happy_help(char **args)
 
 	for(i=0; i<nums_b(); i++)
 	{
-		cout<<"-->"<<b_str[i]<<endl;
+		cout<<"--> "<<b_str[i]<<endl;
 	}
 
 	cout<<"\t Use at your own risk ;)\n";
@@ -284,6 +315,7 @@ int main()
 	char *line;
 	char **args;
 	int status;
+	outfile.open(".history.txt");
 
 	current_dir = (char*) malloc(sizeof(char) * MAX_SIZE);
 	init_dir = (char*) malloc(sizeof(char) * MAX_SIZE);
@@ -297,6 +329,7 @@ int main()
 
 	}while(status);
 
+	outfile.close();
 	exit(0);
 
 }
